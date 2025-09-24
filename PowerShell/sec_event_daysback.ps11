@@ -1,0 +1,19 @@
+# Show ALL Security events from the last number of days and save to C:\Temp\sec-events.txt
+
+$DaysBack  = 40
+$StartTime = (Get-Date).AddDays(-$DaysBack)
+$OutPath   = 'C:\Temp\sec-events.txt'
+
+# Ensure C:\Temp exists
+$dir = Split-Path $OutPath
+if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+
+Get-WinEvent -FilterHashtable @{
+    LogName   = 'Security'
+    StartTime = $StartTime
+} |
+ForEach-Object {
+    "[{0}] EventID:{1} Level:{2}`r`nSource:{3}`r`nMessage:`r`n{4}`r`n--" -f `
+        $_.TimeCreated, $_.Id, $_.LevelDisplayName, $_.ProviderName, $_.Message
+} |
+Out-File -FilePath $OutPath -Encoding UTF8
